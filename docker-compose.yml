@@ -1,0 +1,96 @@
+version: '3'
+services:
+  varnish:
+    # keopx/varnish available tags: latest, 5.1, 5.0, ${VARNISH_VERSION}.
+    image: keopx/varnish:${VARNISH_VERSION}
+    ports:
+      - "${VARNISH_BACKEND_PORT}:80"
+      - "${VARNISH_ADMIN_PORT}:6082"
+    volumes:
+      - ./config/varnish/${VARNISH_VERSION}/default.vcl:/etc/varnish/default.vcl
+      ## mattiasgeniar file: https://github.com/mattiasgeniar/varnish-4.0-configuration-templates
+      # - ./config/varnish/${VARNISH_VERSION}/drupal-template.vcl:/etc/varnish/default.vcl
+      ## Niteman file: https://github.com/NITEMAN/varnish-bites/blob/master/varnish4/drupal-base.vcl
+      # - ./config/varnish/${VARNISH_VERSION}/drupal-base.vcl:/etc/varnish/default.vcl
+    # environment:
+      # - VARNISH_PORT=${VARNISH_BACKEND_PORT}
+      # - VARNISH_MEMORY=${VARNISH_MEMORY}
+      # Next values only works with default default.vcl file.
+      # - VARNISH_BACKEND_IP=${VARNISH_BACKEND_IP}
+      # - VARNISH_BACKEND_PORT=${VARNISH_BACKEND_PORT}
+    links:
+      - web
+  web:
+    # keopx/apache-php available tags: latest, 7.2, 7.1, 7.0, 5.6.
+    image: keopx/apache-php:${PHP_VERSION}
+    ports:
+      # 8008 works without varnish.
+      - "${WEB_PORT}:80"
+      # - "${WEB_PORT_SSL}:443"
+    links:
+      - mysql
+      - redis
+      - mail
+    volumes:
+      - ${WEB_DATA_DIR}:/var/www # Data.
+      - ./config/vhosts:/etc/apache2/sites-enabled
+      ### See: https://github.com/keopx/docker-lamp for more information.
+      ## php.ini for php 7.x and remove environment varibles.
+      - ./config/php/${PHP_VERSION}/php.ini:/etc/php/${PHP_VERSION}/apache2/php.ini
+      ## Opcache
+      # - ./config/php/opcache-recommended.ini:/etc/php/${PHP_VERSION}/apache2/conf.d/10-opcache.ini
+      ## APCU
+      # - ./config/php/apcu.ini:/etc/php/${PHP_VERSION}/apache2/conf.d/20-apcu.ini
+      ## Xdebug
+      # - ./config/php/xdebug.ini:/etc/php/${PHP_VERSION}/apache2/conf.d/20-xdebug.ini
+      ## Xhprof
+      #- ./config/php/xhprof.ini:/etc/php/${PHP_VERSION}/apache2/conf.d/20-xhprof.ini
+      ## SSMTP support
+      #- ${SSMTP}:/etc/ssmtp/ssmtp.conf
+      ## Drush aliases support. e.g.
+      # - ${WEB_DRUSH}:/root/.drush
+      ## SSH support. Uncomment environment -> # - SSH_AUTH_SOCK=/ssh-agent
+      # - ${SSH_AUTH_SOCK}:/ssh-agent
+    #environment:
+      ### WARNING: Use only if you not use custom php.ini.
+      ## ssmtp mail sender.
+      # - PHP_SENDMAIL_PATH="${PHP_SENDMAIL_PATH}"
+      ## SMTP server configruation: "domain:port" | "mail" server domain is mailhog name.
+      # - PHP_SENDMAIL_DOMAIN=${PHP_SENDMAIL_DOMAIN}
+      ## SSH support. Uncomment volumes -> # - ${SSH_AUTH_SOCK}:/ssh-agent
+      # - SSH_AUTH_SOCK=/ssh-agent
+      # - XDEBUG_ENABLED
+      # - XDEBUG_HOST
+    working_dir: /var/www
+  mysql:
+    # keopx/mysql available tags: latest, 8.0, 5.7, 5.6, 5.5.
+    image: keopx/mysql:${MYSQL_VERSION}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - ${MYSQL_DATA_DIR}:/var/lib/mysql
+      ## Custom setup for MySQL
+      # - ./config/mysql/my.cnf:/etc/mysql/my.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+  redis:
+    # keopx/redis available tags: latest, 3.2, 3.0
+    image: keopx/redis:${REDIS_VERSION}
+    ports:
+      - "${REDIS_PORT}:6379"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "${PMA_PORT}:80"
+    links:
+      - mysql
+    environment:
+      - PMA_HOST=${PMA_HOST}
+  mail:
+    image: mailhog/mailhog
+    ports:      
+      - "${MAILHOG_PORT_SMTP}:1025"
+      - "${MAILHOG_PORT_WEB}:8025"

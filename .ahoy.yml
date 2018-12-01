@@ -1,0 +1,83 @@
+ahoyapi: v2
+commands:
+  ps:
+    cmd: docker-compose ps "$@"
+    usage: List containers.
+
+  start:
+    cmd: docker-compose start "$@"
+    usage: Start services.
+
+  stop:
+    cmd: docker-compose stop "$@"
+    usage: Stop services.
+
+  restart:
+    cmd: docker-compose restart "$@"
+    usage: Restart services.
+
+  up:
+    cmd: docker-compose up -d "$@"
+    usage: Create and start containers.
+
+  down:
+    cmd: docker-compose down "$@"
+    usage: Stop and remove containers, networks, images, and volumes.
+
+  traefik:
+    cmd: |
+      if [ ! "$(docker ps -q -f name=main_traefik)" ]; then
+        docker run --rm -d -p 80:80 -p 443:443 -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock --network traefik_default --name main_traefik keopx/traefik --web --docker --logLevel=DEBUG
+        echo "Traefik is running"
+      else
+        echo "Traefik is already running"
+      fi
+    usage: Start traefik
+
+  composer:
+    cmd: docker-compose exec --user=keopx web composer "$@"
+    usage: Run Composer commands in the web service container.
+
+  drupal:
+    cmd: docker-compose exec --user=keopx web vendor/bin/drupal "$@"
+    usage: Run Drupal Console commands in the web service container.
+
+  drush:
+    cmd: docker-compose exec --user=keopx web vendor/bin/drush "$@"
+    usage: Run Drush commands in the web service container.
+
+  sync-all-prod:
+    cmd: ahoy sync-db-prod && ahoy rsync-files-prod
+    usage: Synd DB and files from @site.prod to @site.local.
+
+  sync-db-prod:
+    cmd: docker-compose exec --user=keopx web vendor/bin/drush sql:sync @site.prod @site.local -y
+    usage: Run Drush sql:sync @site.prod @site.local.
+
+  rsync-files-prod:
+    cmd: docker-compose exec --user=keopx web vendor/bin/drush rsync @site.prod:%files @site.local:%files -y -- -rlptzO --no-perms
+    usage: Run Drush rsync @site.prod @site.local files directory | rsync options after -- https://github.com/drush-ops/drush/issues/3491
+
+  rsync-private-prod:
+    cmd: docker-compose exec --user=keopx web vendor/bin/drush rsync @site.prod:%private @site.local:%private -y -- -rlptzO --no-perms
+    usage: Run Drush rsync @site.prod @site.local private directory
+
+  deploy:
+    cmd: bin/deploy.sh
+    usage: Deploy using ansistrano.
+
+  blt:
+    cmd: docker-compose exec --user=keopx web vendor/bin/blt "$@"
+    usage: Run BLT commands in the web service container.
+
+  bash:
+    cmd: docker-compose exec --user=keopx web bash
+    usage: Run bash into web service container.
+
+  logs:
+    cmd: docker-compose logs -f "$@"
+    usage: Show logs
+
+  destroy:
+    cmd: docker-compose down -v
+    usage: Stop and remove containers, networks, images, and destroy volumes.
