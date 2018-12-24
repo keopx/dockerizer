@@ -26,6 +26,12 @@ commands:
 
   traefik:
     cmd: |
+      if [ ! "$(docker network ls | grep traefik_default)" ]; then
+        echo "Creating traefik_default network ..."
+        docker network create -d bridge traefik_default
+      else
+        echo "traefik_default network exists."
+      fi
       if [ ! "$(docker ps -q -f name=main_traefik)" ]; then
         docker run --rm -d -p 80:80 -p 443:443 -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock --network traefik_default --name main_traefik keopx/traefik --web --docker --logLevel=DEBUG
         echo "Traefik is running"
