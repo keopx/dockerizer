@@ -1,0 +1,18 @@
+version: '3.4'
+services:
+  varnish:
+    #  volumes:
+    #    - ./config/varnish/${VARNISH_VERSION}/default.vcl:/etc/varnish/default.vcl
+    ## mattiasgeniar file: https://github.com/mattiasgeniar/varnish-4.0-configuration-templates
+    # - ./config/varnish/${VARNISH_VERSION}/drupal-template.vcl:/etc/varnish/default.vcl
+    ## Niteman file: https://github.com/NITEMAN/varnish-bites/blob/master/varnish4/drupal-base.vcl
+    # - ./config/varnish/${VARNISH_VERSION}/drupal-base.vcl:/etc/varnish/default.vcl
+  web:
+    environment:
+      - PHP_SENDMAIL_PATH
+      - PHP_SENDMAIL_DOMAIN
+      - XDEBUG_ENABLED
+      - PHP_MEMORY_LIMIT
+  mysql:
+    # volumes:
+    #   - ${MYSQL_DATA_DIR}:/var/lib/mysql

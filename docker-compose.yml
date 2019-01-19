@@ -1,15 +1,9 @@
-version: '3'
+version: '3.4'
 services:
   varnish:
     image: keopx/varnish:${VARNISH_VERSION}
     container_name: "${PROJECT_NAME}_varnish"
     network_mode: traefik_default
-    #  volumes:
-    #    - ./config/varnish/${VARNISH_VERSION}/default.vcl:/etc/varnish/default.vcl
-    ## mattiasgeniar file: https://github.com/mattiasgeniar/varnish-4.0-configuration-templates
-    # - ./config/varnish/${VARNISH_VERSION}/drupal-template.vcl:/etc/varnish/default.vcl
-    ## Niteman file: https://github.com/NITEMAN/varnish-bites/blob/master/varnish4/drupal-base.vcl
-    # - ./config/varnish/${VARNISH_VERSION}/drupal-base.vcl:/etc/varnish/default.vcl
     environment:
       - VARNISH_PORT=${VARNISH_BACKEND_PORT}
       - VARNISH_MEMORY=${VARNISH_MEMORY}
@@ -29,17 +23,10 @@ services:
       ## SSH support. Uncomment environment -> # - SSH_AUTH_SOCK=/ssh-agent
       - ${SSH_AUTH_SOCK}:/ssh-agent
     environment:
+      ## Use webroot directory. i.e: /web for drupal scaffolding.
+      - WEB_ROOT
       ## SSH support. Uncomment volumes -> # - ${SSH_AUTH_SOCK}:/ssh-agent
       - SSH_AUTH_SOCK=/ssh-agent
-      - WEB_ROOT
-      ### WARNING: Use only if you not use custom php.ini.
-      - PHP_SENDMAIL_PATH=${PHP_SENDMAIL_PATH}
-      - PHP_SENDMAIL_DOMAIN=${PHP_SENDMAIL_DOMAIN}
-      - XDEBUG_ENABLED=${XDEBUG_ENABLED:-1}
-      - XDEBUG_IDEKEY=${XDEBUG_IDEKEY:-STARK}
-      - XDEBUG_HOST
-      - PHP_SENDMAIL_DOMAIN
-      - PHP_MEMORY_LIMIT
     working_dir: /var/www/html
     labels:
       - 'traefik.port=80'
@@ -49,8 +36,6 @@ services:
     image: keopx/${MYSQL_TYPE}:${MYSQL_VERSION}
     container_name: "${PROJECT_NAME}_${MYSQL_HOST}"
     network_mode: traefik_default
-    #      volumes:
-    #        - ${MYSQL_DATA_DIR}:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
