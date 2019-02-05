@@ -16,3 +16,7 @@ services:
   mysql:
     # volumes:
     #   - ${MYSQL_DATA_DIR}:/var/lib/mysql
+  mail:
+    # ports:
+      # - "${MAILHOG_PORT_SMTP}:1025"
+      # - "${MAILHOG_PORT_WEB}:8025"

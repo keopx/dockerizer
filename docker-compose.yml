@@ -64,9 +64,6 @@ services:
     image: mailhog/mailhog
     container_name: "${PROJECT_NAME}_mailhog"
     network_mode: traefik_default
-    ports:
-      - "${MAILHOG_PORT_SMTP}:1025"
-      - "${MAILHOG_PORT_WEB}:8025"
     labels:
       - 'traefik.backend=${PROJECT_NAME}_mailhog'
       - 'traefik.port=8025'
